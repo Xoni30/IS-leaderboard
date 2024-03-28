@@ -1,29 +1,87 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leaderboard</title>
+  <title>Affiliates Leaderboard</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .font-monsterat {
+      font-family: 'Montserrat', sans-serif;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <img src="logo.png" alt="Your Logo">
-    <h1>Leaderboard</h1>
+  <header class="font-monsterat">
+    <img src="logo.png" alt="Logo">
+    <h1>Affiliates Leaderboard</h1>
   </header>
-  <section id="leaderboard">
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Name</th>
-          <th>Invites</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard-data">
-        </tbody>
-    </table>
-  </section>
-  <script src="script.js"></script>
+  <table id="leaderboard">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Name</th>
+        <th>Invites</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    window.googleDocCallback = function () { return true; };
+
+    const leaderboardTable = document.getElementById('leaderboard').getElementsByTagName('tbody')[0];
+
+    function updateLeaderboard(data) {
+  // Sort data by invites (descending)
+  data.sort((a, b) => b.Invites - a.Invites);
+
+  let rank = 1;
+  for (const row of data) {
+    if (!row.Name || !row.Invites) {
+      continue; // Skip rows missing Name or Invites
+    }
+    const tableRow = document.createElement('tr');
+    
+    let rankCell = document.createElement('td');
+    if (rank <= 3) {
+      rankCell.textContent = rank === 1 ? '' : rank === 2 ? '' : '';
+    } else {
+      rankCell.textContent = rank;
+    }
+    tableRow.appendChild(rankCell);
+
+    const nameCell = document.createElement('td');
+    nameCell.textContent = row.Name || 'N/A'; // Display 'N/A' if Name is missing
+    tableRow.appendChild(nameCell);
+
+    const invitesCell = document.createElement('td');
+    invitesCell.textContent = row.Invites || '0'; // Display '0' if Invites is missing
+    tableRow.appendChild(invitesCell);
+
+    leaderboardTable.appendChild(tableRow);
+    rank++;
+  }
+}
+
+
+    // Fetch data from Google Sheet (replace with your actual URL)
+    fetch('https://docs.google.com/spreadsheets/d/1hbHLZkdYd1qtehehSfe6R2xB1iZrNuzXZlsOpkjU0OA/gviz/tq?tqx=out:csv&sheet=LeaderboardData')
+      .then(response => response.text())
+      .then(csvData => {
+        const data = [];
+        const rows = csvData.split('\n');
+        const headers = rows[0].split(',');
+        for (let i = 1; i < rows.length; i++) {
+          const rowData = rows[i].split(',');
+          const rowObject = {};
+          for (let j = 0; j < headers.length; j++) {
+            rowObject[headers[j]] = rowData[j];
+          }
+          data.push(rowObject);
+        }
+        updateLeaderboard(data);
+      })
+      .catch(error => console.error(error));
+  </script>
 </body>
 </html>
